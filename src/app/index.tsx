@@ -8,7 +8,7 @@ ReactDOM.render(
   <React.StrictMode>
     <ApiProvider
       url="https://jean-test-api.herokuapp.com/"
-      token="" // set your api token here
+      token="c1f880f2-ca2e-451b-a0eb-caf4354a328f" // TODO: this should be session based
     >
       <App />
     </ApiProvider>
