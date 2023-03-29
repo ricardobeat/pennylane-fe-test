@@ -3,6 +3,7 @@ import { useParams } from 'react-router'
 
 import { useApi } from 'api'
 import { Invoice } from 'types'
+import Table from 'react-bootstrap/esm/Table'
 
 const InvoiceShow = () => {
   const { id } = useParams<{ id: string }>()

@@ -1,9 +1,13 @@
 import { useApi } from 'api'
 import { Invoice } from 'types'
 import { useEffect, useCallback, useState } from 'react'
+import Table from 'react-bootstrap/Table'
+import './InvoicesList.css'
+import { useHistory } from 'react-router-dom'
 
 const InvoicesList = (): React.ReactElement => {
   const api = useApi()
+  const history = useHistory()
 
   const [invoicesList, setInvoicesList] = useState<Invoice[]>([])
 
@@ -17,7 +21,7 @@ const InvoicesList = (): React.ReactElement => {
   }, [fetchInvoices])
 
   return (
-    <table className="table table-bordered table-striped">
+    <Table striped bordered hover>
       <thead>
         <tr>
           <th>Id</th>
@@ -33,7 +37,11 @@ const InvoicesList = (): React.ReactElement => {
       </thead>
       <tbody>
         {invoicesList.map((invoice) => (
-          <tr key={invoice.id}>
+          <tr
+            key={invoice.id}
+            className="row-clickable"
+            onClick={() => history.push(`/invoice/${invoice.id}`)}
+          >
             <td>{invoice.id}</td>
             <td>
               {invoice.customer?.first_name} {invoice.customer?.last_name}
@@ -51,7 +59,7 @@ const InvoicesList = (): React.ReactElement => {
           </tr>
         ))}
       </tbody>
-    </table>
+    </Table>
   )
 }
 
