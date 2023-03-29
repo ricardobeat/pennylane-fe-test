@@ -15,6 +15,10 @@ const getCustomerLabel = (customer: Customer) => {
   return `${customer.first_name} ${customer.last_name}`
 }
 
+const getOptionValue = (customer: Customer) => {
+  return customer.id
+}
+
 const CustomerAutocomplete = ({ value, onChange }: Props) => {
   const api = useApi()
 
@@ -41,6 +45,7 @@ const CustomerAutocomplete = ({ value, onChange }: Props) => {
     <AsyncPaginate
       placeholder="Search a customer"
       getOptionLabel={getCustomerLabel}
+      getOptionValue={getOptionValue}
       additional={defaultAdditional}
       value={value}
       onChange={onChange}
