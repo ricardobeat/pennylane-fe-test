@@ -26,16 +26,14 @@ const CustomerAutocomplete = ({ value, onChange }: Props) => {
     async (search, loadedOptions, { page }) => {
       const { data } = await api.getSearchCustomers({
         query: search,
-        per_page: 10,
+        per_page: 30,
         page,
       })
 
       return {
         options: data.customers,
         hasMore: data.pagination.page < data.pagination.total_pages,
-        additional: {
-          page: page + 1,
-        },
+        additional: { page: page + 1 },
       }
     },
     [api]
@@ -50,8 +48,25 @@ const CustomerAutocomplete = ({ value, onChange }: Props) => {
       value={value}
       onChange={onChange}
       loadOptions={loadOptions}
+      shouldLoadMore={shouldLoadMore}
+      debounceTimeout={100}
     />
   )
+}
+
+/**
+ * Start loading halfway through the current "page", instead of only when you reach the bottom
+ *
+ * TODO: use react-windowed-select, get total count from API, and render a virtualized list with placeholders,
+ * then on view, calculate current page to load. Would make scrolling feel more natural when loading the full dataset
+ */
+function shouldLoadMore(
+  scrollHeight: number,
+  clientHeight: number,
+  scrollTop: number
+) {
+  const bottom = scrollHeight - clientHeight - clientHeight / 2
+  return bottom < scrollTop
 }
 
 export default CustomerAutocomplete
