@@ -1,65 +1,81 @@
-import { useApi } from 'api'
-import { Invoice } from 'types'
-import { useEffect, useCallback, useState } from 'react'
+import { useCallback } from 'react'
+
+import Container from 'react-bootstrap/Container'
+import Alert from 'react-bootstrap/Alert'
+
+import Stack from 'react-bootstrap/Stack'
 import Table from 'react-bootstrap/Table'
-import './InvoicesList.css'
+import Spinner from 'react-bootstrap/Spinner'
+
+import { useApi } from 'api'
 import { useHistory } from 'react-router-dom'
+
+import './InvoicesList.css'
+import { useFetch } from 'app/hooks/use-fetch'
 
 const InvoicesList = (): React.ReactElement => {
   const api = useApi()
   const history = useHistory()
 
-  const [invoicesList, setInvoicesList] = useState<Invoice[]>([])
-
   const fetchInvoices = useCallback(async () => {
     const { data } = await api.getInvoices()
-    setInvoicesList(data.invoices)
+    return data.invoices
   }, [api])
 
-  useEffect(() => {
-    fetchInvoices()
-  }, [fetchInvoices])
+  const { data: invoices, loading } = useFetch(fetchInvoices, [])
+
+  if (loading) {
+    return (
+      <Alert variant="secondary">
+        <Spinner size="sm" />
+        <small className="ml-3">loading invoices...</small>
+      </Alert>
+    )
+  }
 
   return (
-    <Table striped bordered hover>
-      <thead>
-        <tr>
-          <th>Id</th>
-          <th>Customer</th>
-          <th>Address</th>
-          <th>Total</th>
-          <th>Tax</th>
-          <th>Finalized</th>
-          <th>Paid</th>
-          <th>Date</th>
-          <th>Deadline</th>
-        </tr>
-      </thead>
-      <tbody>
-        {invoicesList.map((invoice) => (
-          <tr
-            key={invoice.id}
-            className="row-clickable"
-            onClick={() => history.push(`/invoice/${invoice.id}`)}
-          >
-            <td>{invoice.id}</td>
-            <td>
-              {invoice.customer?.first_name} {invoice.customer?.last_name}
-            </td>
-            <td>
-              {invoice.customer?.address}, {invoice.customer?.zip_code}{' '}
-              {invoice.customer?.city}
-            </td>
-            <td>{invoice.total}</td>
-            <td>{invoice.tax}</td>
-            <td>{invoice.finalized ? 'Yes' : 'No'}</td>
-            <td>{invoice.paid ? 'Yes' : 'No'}</td>
-            <td>{invoice.date}</td>
-            <td>{invoice.deadline}</td>
+    <Stack gap={3}>
+      <Container></Container>
+      <Table striped bordered hover>
+        <thead>
+          <tr>
+            <th>Id</th>
+            <th>Customer</th>
+            <th>Address</th>
+            <th>Total</th>
+            <th>Tax</th>
+            <th>Finalized</th>
+            <th>Paid</th>
+            <th>Date</th>
+            <th>Deadline</th>
           </tr>
-        ))}
-      </tbody>
-    </Table>
+        </thead>
+        <tbody>
+          {invoices.map((invoice) => (
+            <tr
+              key={invoice.id}
+              className="row-clickable"
+              onClick={() => history.push(`/invoice/${invoice.id}`)}
+            >
+              <td>{invoice.id}</td>
+              <td>
+                {invoice.customer?.first_name} {invoice.customer?.last_name}
+              </td>
+              <td>
+                {invoice.customer?.address}, {invoice.customer?.zip_code}{' '}
+                {invoice.customer?.city}
+              </td>
+              <td>{invoice.total}</td>
+              <td>{invoice.tax}</td>
+              <td>{invoice.finalized ? 'Yes' : 'No'}</td>
+              <td>{invoice.paid ? 'Yes' : 'No'}</td>
+              <td>{invoice.date}</td>
+              <td>{invoice.deadline}</td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+    </Stack>
   )
 }
 
