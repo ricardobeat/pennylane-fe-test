@@ -12,6 +12,10 @@ import { useHistory } from 'react-router-dom'
 
 import './InvoicesList.css'
 import { useFetch } from 'app/hooks/use-fetch'
+import {
+  formatCustomerAddress,
+  formatCustomerFullName,
+} from 'app/lib/formatting'
 
 const InvoicesList = (): React.ReactElement => {
   const api = useApi()
@@ -58,13 +62,8 @@ const InvoicesList = (): React.ReactElement => {
               onClick={() => history.push(`/invoice/${invoice.id}`)}
             >
               <td>{invoice.id}</td>
-              <td>
-                {invoice.customer?.first_name} {invoice.customer?.last_name}
-              </td>
-              <td>
-                {invoice.customer?.address}, {invoice.customer?.zip_code}{' '}
-                {invoice.customer?.city}
-              </td>
+              <td>{formatCustomerFullName(invoice.customer)}</td>
+              <td>{formatCustomerAddress(invoice.customer)}</td>
               <td>{invoice.total}</td>
               <td>{invoice.tax}</td>
               <td>{invoice.finalized ? 'Yes' : 'No'}</td>
