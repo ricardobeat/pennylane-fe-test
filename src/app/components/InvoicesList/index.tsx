@@ -1,8 +1,7 @@
 import { useCallback } from 'react'
 
-import Container from 'react-bootstrap/Container'
 import Alert from 'react-bootstrap/Alert'
-
+import Button from 'react-bootstrap/Button'
 import Stack from 'react-bootstrap/Stack'
 import Table from 'react-bootstrap/Table'
 import Spinner from 'react-bootstrap/Spinner'
@@ -39,7 +38,11 @@ const InvoicesList = (): React.ReactElement => {
 
   return (
     <Stack gap={3}>
-      <Container></Container>
+      <Stack direction="horizontal" className="justify-content-end" gap={3}>
+        <Button onClick={() => history.push(`/invoice/new`)}>
+          Create invoice
+        </Button>
+      </Stack>
       <Table striped bordered hover>
         <thead>
           <tr>

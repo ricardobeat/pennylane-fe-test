@@ -1,12 +1,12 @@
-import Stack from 'react-bootstrap/Stack'
+import Container from 'react-bootstrap/Container'
 
 export default function Header() {
   return (
     <header>
-      <Stack className="mt-5">
+      <Container className="mt-5 mb-5">
         <h1>Fern Hill</h1>
         <p className="text-muted">Invoices</p>
-      </Stack>
+      </Container>
     </header>
   )
 }
