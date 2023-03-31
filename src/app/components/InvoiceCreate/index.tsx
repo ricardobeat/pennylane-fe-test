@@ -10,13 +10,13 @@ import Breadcrumb from 'react-bootstrap/esm/Breadcrumb'
 import Stack from 'react-bootstrap/Stack'
 
 import CustomerAutocomplete from '../CustomerAutocomplete'
-import { formatCurrency, formatCustomerAddress } from 'app/lib/formatting'
+import { formatCustomerAddress } from 'app/lib/formatting'
 import { InvoiceLineForm } from './InvoiceLineForm'
 
 import type { Invoice, InvoiceLine } from 'types'
 
 import './InvoiceCreate.css'
-import Table from 'react-bootstrap/esm/Table'
+import InvoiceLines from '../InvoiceLines'
 
 const initialState: Invoice = {
   id: 0,
@@ -84,36 +84,7 @@ const InvoiceCreate = () => {
           <Form.Label className="fw-semibold">Items</Form.Label>
           <Form.Text> ({formState.invoice_lines.length})</Form.Text>
 
-          <Table>
-            <thead>
-              <tr>
-                <th>Quantity</th>
-                <th>Name</th>
-                <th>Product ID</th>
-                <th>Unit</th>
-                <th>VAT</th>
-                <th>Unit Price</th>
-                <th>Total</th>
-                <th>Tax</th>
-              </tr>
-            </thead>
-            <tbody>
-              {formState.invoice_lines.map((item) => {
-                return (
-                  <tr key={`invoice-line-${item.id}`}>
-                    <td>{item.quantity}</td>
-                    <td>{item.label}</td>
-                    <td>{item.product_id}</td>
-                    <td>{item.unit}</td>
-                    <td>{item.vat_rate}%</td>
-                    <td>{formatCurrency(item.product.unit_price)}</td>
-                    <td>{formatCurrency(item.price)}</td>
-                    <td>{formatCurrency(item.tax)}</td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </Table>
+          <InvoiceLines items={formState.invoice_lines} />
 
           <div className="mb-3">
             <InvoiceLineForm onAdd={addInvoiceLine} />

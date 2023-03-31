@@ -18,14 +18,27 @@ const displayFormat = new Intl.NumberFormat(window.navigator.language, {
   minimumFractionDigits: 2,
 })
 
+const displayFormatWithSymbol = new Intl.NumberFormat(
+  window.navigator.language,
+  {
+    style: 'currency',
+    currency: 'EUR',
+    useGrouping: true,
+    minimumFractionDigits: 2,
+  }
+)
+
 const apiFormat = new Intl.NumberFormat(window.navigator.language, {
   style: 'decimal',
   useGrouping: false,
   minimumFractionDigits: 1,
 })
 
-export function formatCurrency(input: number | string = 0): string {
-  return displayFormat.format(Number(input)) //FIXME: should be stricter about input, not assume dot separator
+export function formatCurrency(
+  input: number | string | null = 0,
+  sign = false
+): string {
+  return (sign ? displayFormatWithSymbol : displayFormat).format(Number(input)) //FIXME: should be stricter about input, not assume dot separator
 }
 
 /**

@@ -12,6 +12,7 @@ import { useHistory } from 'react-router-dom'
 import './InvoicesList.css'
 import { useFetch } from 'app/hooks/use-fetch'
 import {
+  formatCurrency,
   formatCustomerAddress,
   formatCustomerFullName,
 } from 'app/lib/formatting'
@@ -69,8 +70,8 @@ const InvoicesList = (): React.ReactElement => {
                 <td>{invoice.id}</td>
                 <td>{formatCustomerFullName(invoice.customer)}</td>
                 <td>{formatCustomerAddress(invoice.customer)}</td>
-                <td>{invoice.total}</td>
-                <td>{invoice.tax}</td>
+                <td>{formatCurrency(invoice.total, true)}</td>
+                <td>{formatCurrency(invoice.tax, true)}</td>
                 <td>{invoice.finalized ? 'Yes' : 'No'}</td>
                 <td>{invoice.paid ? 'Yes' : 'No'}</td>
                 <td>{invoice.date}</td>
