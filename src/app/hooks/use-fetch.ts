@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 
+/**
+ * Note that the input function MUST be memoized. Usage example:
+ *
+ *   const getUser = useCallback(() => api.getUser(id).then(data => data.user), [id])
+ *   const { data: user } = useFetch(getUser, {})
+ *
+ * (I'd use something like react-query for this)
+ */
+
 export function useFetch<T>(fn: () => Promise<T>, initialData: T) {
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<T>(initialData)
@@ -9,10 +18,7 @@ export function useFetch<T>(fn: () => Promise<T>, initialData: T) {
       setData(result)
       setLoading(false)
     })
-    // either we assume load functions can't change, or they will have to be wrapped
-    // in useCallback everywhere. going for ergonomics
-    //eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [fn])
 
   return useMemo(() => {
     return {
