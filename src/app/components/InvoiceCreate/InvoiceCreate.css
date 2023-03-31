@@ -2,3 +2,25 @@
   color: #555;
   background-color: #fafafa;
 }
+
+.customer-details {
+  columns: 3;
+  margin: 0;
+}
+
+.customer-details > div {
+  break-inside: avoid-column;
+}
+
+.invoice-details {
+  columns: 2;
+  margin: 0;
+}
+
+.invoice-details>div {
+  break-inside: avoid-column;
+}
+
+.react-datepicker-wrapper {
+  width: 100%;
+}

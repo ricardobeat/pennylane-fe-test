@@ -1,10 +1,9 @@
 import { useCallback, useState, useMemo } from 'react'
 import type { Product, InvoiceLine } from '../../types'
 
-import Row from 'react-bootstrap/Row'
-import Col from 'react-bootstrap/Col'
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
+import Stack from 'react-bootstrap/Stack'
 
 import ProductAutocomplete from './ProductAutocomplete'
 import { formatCurrencyValue } from 'app/lib/formatting'
@@ -26,12 +25,11 @@ type NewInvoiceLine = Pick<
   | 'product'
 >
 
-export function InvoiceLineForm({ onAdd }: Props) {
+export function AddProduct({ onAdd }: Props) {
   const [quantity, setQuantity] = useState(1)
   const [selectedProduct, setSelectedProduct] = useState<Product>()
 
   const invoiceLine: NewInvoiceLine | null = useMemo(() => {
-    console.log(selectedProduct, quantity)
     if (!selectedProduct) return null
     return {
       quantity,
@@ -46,7 +44,6 @@ export function InvoiceLineForm({ onAdd }: Props) {
   }, [selectedProduct, quantity])
 
   const reset = () => {
-    console.log('clearing form')
     setQuantity(1)
     setSelectedProduct(undefined)
   }
@@ -61,15 +58,24 @@ export function InvoiceLineForm({ onAdd }: Props) {
 
   return (
     <>
-      <Row className="mb-3 align-items-end">
-        <Form.Group as={Col} sm={9}>
+      {Boolean(selectedProduct) && (
+        <InvoiceLineEditable invoiceLine={invoiceLine as InvoiceLine} />
+      )}
+
+      <Stack
+        direction="horizontal"
+        gap={2}
+        className="align-items-end justify-content-end"
+      >
+        <Form.Group className="w-100">
           <Form.Label className="fw-semibold">Add product</Form.Label>
           <ProductAutocomplete
             onChange={setSelectedProduct}
             value={selectedProduct}
           />
         </Form.Group>
-        <Form.Group as={Col} controlId="inputTax">
+
+        <Form.Group controlId="inputTax">
           <Form.Label className="fw-semibold">Quantity</Form.Label>
           <Form.Control
             type="number"
@@ -78,22 +84,15 @@ export function InvoiceLineForm({ onAdd }: Props) {
           />
         </Form.Group>
 
-        <Form.Group as={Col}>
-          <div>
-            <Button
-              variant="dark"
-              onClick={() => invoiceLine && addProduct(invoiceLine)}
-              disabled={!selectedProduct}
-            >
-              Add product
-            </Button>
-          </div>
-        </Form.Group>
-      </Row>
-
-      {Boolean(selectedProduct) && (
-        <InvoiceLineEditable invoiceLine={invoiceLine as InvoiceLine} />
-      )}
+        <Button
+          variant="dark"
+          onClick={() => invoiceLine && addProduct(invoiceLine)}
+          disabled={!selectedProduct}
+          style={{ whiteSpace: 'nowrap' }}
+        >
+          Add product
+        </Button>
+      </Stack>
     </>
   )
 }

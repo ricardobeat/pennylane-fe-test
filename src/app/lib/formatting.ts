@@ -48,3 +48,10 @@ export function formatCurrency(
 export function formatCurrencyValue(input: number): string {
   return apiFormat.format(input)
 }
+
+export function formatDate(date: Date) {
+  const year = date.getFullYear()
+  const month = date.getMonth() + 1
+  const day = date.getDate().toString().padStart(2, '0')
+  return `${year}-${month}-${day}`
+}

@@ -1,21 +1,28 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import ReactDatePicker from 'react-datepicker'
+
+import './InvoiceCreate.css'
 
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Button from 'react-bootstrap/Button'
-import Form from 'react-bootstrap/Form'
-import InputGroup from 'react-bootstrap/esm/InputGroup'
-import Container from 'react-bootstrap/esm/Container'
+import Card from 'react-bootstrap/Card'
 import Breadcrumb from 'react-bootstrap/esm/Breadcrumb'
+import Container from 'react-bootstrap/esm/Container'
+import Form from 'react-bootstrap/Form'
 import Stack from 'react-bootstrap/Stack'
 
+import { AddProduct } from '../AddProduct'
 import CustomerAutocomplete from '../CustomerAutocomplete'
-import { formatCustomerAddress } from 'app/lib/formatting'
-import { InvoiceLineForm } from '../InvoiceLineForm'
+
+import {
+  formatCurrency,
+  formatCustomerAddress,
+  formatCustomerFullName,
+  formatDate,
+} from 'app/lib/formatting'
 
 import type { Invoice, InvoiceLine } from 'types'
-
-import './InvoiceCreate.css'
 import InvoiceLines from '../InvoiceLines'
 
 const initialState: Invoice = {
@@ -23,7 +30,7 @@ const initialState: Invoice = {
   customer_id: null,
   finalized: false,
   paid: false,
-  date: null,
+  date: formatDate(new Date()),
   deadline: null,
   total: null,
   tax: null,
@@ -31,26 +38,49 @@ const initialState: Invoice = {
   invoice_lines: [],
 }
 
+function getInitialDeadline() {
+  const date = new Date()
+  date.setDate(date.getDate() + 7)
+  return date
+}
+
 const InvoiceCreate = () => {
-  const [formState, setFormState] = useState<Invoice>(initialState)
+  const [customer, setCustomer] = useState<Invoice['customer']>()
+  const [invoiceLines, setInvoiceLines] = useState<Invoice['invoice_lines']>([])
+  const [deadline, setDeadline] = useState<Date>(getInitialDeadline())
+  const [date, setDate] = useState<Date>(new Date())
+  const [paid, setPaid] = useState(false)
 
-  const setCustomer = (customer: NonNullable<Invoice['customer']>) => {
-    setFormState((s) => ({
-      ...s,
-      customer_id: customer.id,
+  const editing = true
+
+  const invoice: Invoice = useMemo(() => {
+    return {
+      ...initialState,
+      customer_id: customer?.id || null,
       customer,
-    }))
-  }
+      date: deadline ? formatDate(deadline) : null,
+      deadline: date ? formatDate(date) : null,
+      invoice_lines: invoiceLines,
+      paid,
+    }
+  }, [customer, invoiceLines, deadline, paid])
 
-  const addInvoiceLine = (invoiceLine: NonNullable<InvoiceLine>) => {
-    setFormState((s) => ({
-      ...s,
-      invoice_lines: [...s.invoice_lines, invoiceLine],
-    }))
+  const addInvoiceLine = (invoiceLine: InvoiceLine) => {
+    setInvoiceLines((s) => [...s, invoiceLine])
   }
 
   const validateForm = () => {
-    return !(formState.customer && formState.invoice_lines.length > 0)
+    return !(invoice.customer && invoice.invoice_lines.length > 0)
+  }
+
+  // FIXME: ideally the API would return numbers or a for of currency object with integers,
+  // otherwise we end up parsing strings over and over like in this case
+  const total = invoiceLines.reduce((p, c) => p + Number(c.price), 0)
+  const taxTotal = invoiceLines.reduce((p, c) => p + Number(c.tax), 0)
+
+  const submit: React.FormEventHandler = (e) => {
+    e.preventDefault()
+    console.log(invoice)
   }
 
   return (
@@ -60,84 +90,131 @@ const InvoiceCreate = () => {
         <Breadcrumb.Item active>Create invoice</Breadcrumb.Item>
       </Breadcrumb>
 
-      <Form>
-        <Form.Group className="mb-3" controlId="inputCustomer">
-          <Form.Label className="fw-semibold">Customer</Form.Label>
-          <CustomerAutocomplete
-            value={formState.customer}
-            onChange={setCustomer}
-          />
-        </Form.Group>
+      <h2>New invoice</h2>
 
-        {!!formState.customer && (
-          <Form.Group>
-            <Form.Label className="fw-semibold">Address</Form.Label>
-            <p>
-              {formatCustomerAddress(formState.customer)}
-              <br />
-              {formState.customer.country}
-            </p>
-          </Form.Group>
-        )}
+      <Form onSubmit={submit}>
+        <Card className="mb-5">
+          <Card.Body className="p-4">
+            <Row className="mb-3">
+              <Form.Group as={Col}>
+                <Form.Label>Invoice #</Form.Label>
+                <Form.Control type="text" readOnly value="--" />
+              </Form.Group>
+              <Form.Group as={Col}>
+                <Form.Label>Date</Form.Label>
+                <div>
+                  <ReactDatePicker
+                    className="form-control"
+                    value={invoice.date ? invoice.date : undefined}
+                    onChange={(date) => date && setDate(date)}
+                  />
+                </div>
+              </Form.Group>
+              <Form.Group as={Col}>
+                <Form.Label>Deadline</Form.Label>
+                <div>
+                  <ReactDatePicker
+                    className="form-control"
+                    value={invoice.deadline ? invoice.deadline : undefined}
+                    onChange={(date) => date && setDeadline(date)}
+                  />
+                </div>
+              </Form.Group>
+            </Row>
 
-        <Form.Group className="mb-3" controlId="inputTax">
-          <Form.Label className="fw-semibold">Items</Form.Label>
-          <Form.Text> ({formState.invoice_lines.length})</Form.Text>
-
-          <InvoiceLines items={formState.invoice_lines} />
-
-          <div className="mb-3">
-            <InvoiceLineForm onAdd={addInvoiceLine} />
-          </div>
-        </Form.Group>
-
-        <Row>
-          <Form.Group as={Col} className="mb-3" controlId="inputTotal">
-            <Form.Label>Total Amount</Form.Label>
-            <InputGroup>
-              <InputGroup.Text>€</InputGroup.Text>
-              <Form.Control
-                type="text"
-                inputMode="numeric"
-                placeholder="0,00"
-                readOnly
+            <Form.Group className="mb-3" controlId="inputCustomer">
+              <Form.Label className="fw-semibold">Customer</Form.Label>
+              <CustomerAutocomplete
+                value={invoice.customer}
+                onChange={setCustomer}
               />
-            </InputGroup>
-          </Form.Group>
+            </Form.Group>
 
-          <Form.Group as={Col} className="mb-3" controlId="inputTax">
-            <Form.Label>Tax</Form.Label>
+            {customer !== undefined && (
+              <Card className="px-3 pt-2 pb-1 mb-4">
+                <dl className="customer-details">
+                  <div>
+                    <dt>Name</dt>
+                    <dd>{formatCustomerFullName(customer)}</dd>
+                  </div>
+                  <div>
+                    <dt>Customer ID</dt>
+                    <dd>{customer.id}</dd>
+                  </div>
+                  <div>
+                    <dt>Address</dt>
+                    <dd>{formatCustomerAddress(customer)}</dd>
+                  </div>
+                  <div>
+                    <dt>Zip Code</dt>
+                    <dd>{customer.zip_code}</dd>
+                  </div>
+                  <div>
+                    <dt>Country</dt>
+                    <dd>{customer.country}</dd>
+                  </div>
+                  <div>
+                    <dt>Country code</dt>
+                    <dd>{customer.country_code}</dd>
+                  </div>
+                </dl>
+              </Card>
+            )}
 
-            <InputGroup>
-              <InputGroup.Text>€</InputGroup.Text>
-              <Form.Control
-                type="text"
-                inputMode="numeric"
-                placeholder="0,00"
-                readOnly
-              />
-            </InputGroup>
-          </Form.Group>
-        </Row>
+            <Form.Group className="mb-3" controlId="inputTax">
+              <Form.Label className="fw-semibold">Items</Form.Label>
+              <Form.Text> ({invoice.invoice_lines.length})</Form.Text>
 
-        <Stack direction="horizontal" gap={2} className="justify-content-end">
-          <Button
-            variant="light"
-            type="reset"
-            onClick={() => window.location.reload()}
-            size="lg"
-          >
-            Clear
-          </Button>
-          <Button
-            variant="primary"
-            type="submit"
-            size="lg"
-            disabled={validateForm()}
-          >
-            Create invoice
-          </Button>
-        </Stack>
+              <InvoiceLines items={invoice.invoice_lines} />
+
+              <Card className="mb-3 p-3" style={{ background: '#fafafa' }}>
+                <AddProduct onAdd={addInvoiceLine} />
+              </Card>
+            </Form.Group>
+
+            <Stack
+              direction="horizontal"
+              gap={5}
+              className="mt-4 text-end justify-content-end"
+            >
+              <div>
+                <h3 className="m-0">Tax</h3>
+                <p className="fs-3 lh-2 m-0">
+                  {formatCurrency(taxTotal, true)}
+                </p>
+              </div>
+              <div>
+                <h3 className="m-0">Total</h3>
+                <p className="fs-3 lh-2 m-0">{formatCurrency(total, true)}</p>
+              </div>
+            </Stack>
+          </Card.Body>
+
+          <Card.Footer>
+            <Stack
+              direction="horizontal"
+              gap={2}
+              className="justify-content-end"
+            >
+              <Button
+                variant="light"
+                type="reset"
+                onClick={() => window.location.reload()}
+                size="lg"
+              >
+                Clear
+              </Button>
+              <Button
+                variant="primary"
+                type="submit"
+                size="lg"
+                disabled={validateForm()}
+              >
+                Create invoice
+              </Button>
+            </Stack>
+          </Card.Footer>
+        </Card>
       </Form>
     </Container>
   )

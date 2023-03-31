@@ -28,6 +28,13 @@ export default function InvoiceLines({
         </tr>
       </thead>
       <tbody>
+        {items.length === 0 && (
+          <tr>
+            <td className="text-center text-muted" colSpan={8}>
+              No items added
+            </td>
+          </tr>
+        )}
         {items.map((item) => {
           return (
             <tr key={`invoice-line-${item.id}`}>
