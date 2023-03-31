@@ -48,7 +48,7 @@ const InvoiceCreate = () => {
   const [customer, setCustomer] = useState<Invoice['customer']>()
   const [invoiceLines, setInvoiceLines] = useState<Invoice['invoice_lines']>([])
   const [deadline, setDeadline] = useState<Date>(getInitialDeadline())
-  const [date, setDate] = useState<Date>(new Date())
+  const [invoiceDate, setInvoiceDate] = useState<Date>(new Date())
   const [paid, setPaid] = useState(false)
 
   const editing = true
@@ -58,20 +58,21 @@ const InvoiceCreate = () => {
       ...initialState,
       customer_id: customer?.id || null,
       customer,
-      date: deadline ? formatDate(deadline) : null,
-      deadline: date ? formatDate(date) : null,
+      date: invoiceDate ? formatDate(invoiceDate) : null,
+      deadline: deadline ? formatDate(deadline) : null,
       invoice_lines: invoiceLines,
       paid,
     }
-  }, [customer, invoiceLines, deadline, paid])
+  }, [customer, invoiceLines, deadline, invoiceDate, paid])
 
   const addInvoiceLine = (invoiceLine: InvoiceLine) => {
     setInvoiceLines((s) => [...s, invoiceLine])
   }
 
-  const validateForm = () => {
-    return !(invoice.customer && invoice.invoice_lines.length > 0)
-  }
+  const isValidDeadline = validateDeadline(deadline, invoiceDate)
+
+  const isFormValid =
+    isValidDeadline && invoice.customer && invoice.invoice_lines.length > 0
 
   // FIXME: ideally the API would return numbers or a for of currency object with integers,
   // otherwise we end up parsing strings over and over like in this case
@@ -106,7 +107,8 @@ const InvoiceCreate = () => {
                   <ReactDatePicker
                     className="form-control"
                     value={invoice.date ? invoice.date : undefined}
-                    onChange={(date) => date && setDate(date)}
+                    onChange={(date) => date && setInvoiceDate(date)}
+                    dateFormat="yyyy-MM-dd"
                   />
                 </div>
               </Form.Group>
@@ -114,9 +116,13 @@ const InvoiceCreate = () => {
                 <Form.Label>Deadline</Form.Label>
                 <div>
                   <ReactDatePicker
-                    className="form-control"
+                    className={`form-control ${
+                      !isValidDeadline ? 'border-danger' : ''
+                    }`}
                     value={invoice.deadline ? invoice.deadline : undefined}
                     onChange={(date) => date && setDeadline(date)}
+                    dateFormat="yyyy-MM-dd"
+                    filterDate={(date) => validateDeadline(date, invoiceDate)}
                   />
                 </div>
               </Form.Group>
@@ -208,7 +214,7 @@ const InvoiceCreate = () => {
                 variant="primary"
                 type="submit"
                 size="lg"
-                disabled={validateForm()}
+                disabled={!isFormValid}
               >
                 Create invoice
               </Button>
@@ -218,6 +224,10 @@ const InvoiceCreate = () => {
       </Form>
     </Container>
   )
+}
+
+function validateDeadline(deadline: Date, invoiceDate: Date) {
+  return +deadline >= +invoiceDate
 }
 
 export default InvoiceCreate
