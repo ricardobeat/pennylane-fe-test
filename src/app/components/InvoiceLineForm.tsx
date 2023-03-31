@@ -1,16 +1,14 @@
 import { useCallback, useState, useMemo } from 'react'
-import type { Product, InvoiceLine } from '../../../types'
+import type { Product, InvoiceLine } from '../../types'
 
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Form from 'react-bootstrap/Form'
-import Card from 'react-bootstrap/Card'
 import Button from 'react-bootstrap/Button'
 
-import ProductAutocomplete from '../ProductAutocomplete'
+import ProductAutocomplete from './ProductAutocomplete'
 import { formatCurrencyValue } from 'app/lib/formatting'
-import InvoiceLines from '../InvoiceLines'
-import InvoiceLineEditable from '../InvoiceLineEditable'
+import InvoiceLineEditable from './InvoiceLineEditable'
 
 interface Props {
   onAdd(invoiceLine: NewInvoiceLine): void

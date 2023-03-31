@@ -11,7 +11,7 @@ import Stack from 'react-bootstrap/Stack'
 
 import CustomerAutocomplete from '../CustomerAutocomplete'
 import { formatCustomerAddress } from 'app/lib/formatting'
-import { InvoiceLineForm } from './InvoiceLineForm'
+import { InvoiceLineForm } from '../InvoiceLineForm'
 
 import type { Invoice, InvoiceLine } from 'types'
 
