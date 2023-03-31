@@ -6,29 +6,33 @@ import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
 import InputGroup from 'react-bootstrap/esm/InputGroup'
 import Container from 'react-bootstrap/esm/Container'
+import Breadcrumb from 'react-bootstrap/esm/Breadcrumb'
+import Stack from 'react-bootstrap/Stack'
 
 import CustomerAutocomplete from '../CustomerAutocomplete'
-import { Invoice } from 'types'
-import { formatCustomerAddress } from 'app/lib/formatting'
-import ProductAutocomplete from '../ProductAutocomplete'
+import { formatCurrency, formatCustomerAddress } from 'app/lib/formatting'
 import { InvoiceLineForm } from './InvoiceLineForm'
 
-const InvoiceCreate = () => {
-  // const api = useApi()
-  // const [invoice, setInvoice] = useState<Invoice>()
+import type { Invoice, InvoiceLine } from 'types'
 
-  const [formState, setFormState] = useState<Invoice>({
-    id: 0,
-    customer_id: null,
-    finalized: false,
-    paid: false,
-    date: null,
-    deadline: null,
-    total: null,
-    tax: null,
-    customer: undefined,
-    invoice_lines: [],
-  })
+import './InvoiceCreate.css'
+import Table from 'react-bootstrap/esm/Table'
+
+const initialState: Invoice = {
+  id: 0,
+  customer_id: null,
+  finalized: false,
+  paid: false,
+  date: null,
+  deadline: null,
+  total: null,
+  tax: null,
+  customer: undefined,
+  invoice_lines: [],
+}
+
+const InvoiceCreate = () => {
+  const [formState, setFormState] = useState<Invoice>(initialState)
 
   const setCustomer = (customer: NonNullable<Invoice['customer']>) => {
     setFormState((s) => ({
@@ -38,101 +42,131 @@ const InvoiceCreate = () => {
     }))
   }
 
-  const addProduct = (product: NonNullable<Invoice['invoice_lines'][0]>) => {
+  const addInvoiceLine = (invoiceLine: NonNullable<InvoiceLine>) => {
     setFormState((s) => ({
       ...s,
-      invoice_lines: [...s.invoice_lines, product],
+      invoice_lines: [...s.invoice_lines, invoiceLine],
     }))
   }
 
-  const [addingInvoiceLine, setAddingInvoiceLine] = useState(false)
+  const validateForm = () => {
+    return !(formState.customer && formState.invoice_lines.length > 0)
+  }
 
   return (
     <Container>
-      <header className="mb-5">
-        <h2>New invoice</h2>
-      </header>
+      <Breadcrumb>
+        <Breadcrumb.Item href="/">Home</Breadcrumb.Item>
+        <Breadcrumb.Item active>Create invoice</Breadcrumb.Item>
+      </Breadcrumb>
 
       <Form>
-        <Form.Group as={Row} className="mb-3" controlId="inputCustomer">
-          <Form.Label column sm={2} className="text-end">
-            Customer
-          </Form.Label>
-          <Col sm={10}>
-            <CustomerAutocomplete
-              value={formState.customer}
-              onChange={setCustomer}
-            />
-            {formState.customer ? (
-              <div className="pt-2 pb-2">
-                <strong>Address: </strong>
-                <pre>
-                  {formatCustomerAddress(formState.customer)}
-                  <br />
-                  {formState.customer.country}
-                </pre>
-              </div>
-            ) : null}
-          </Col>
+        <Form.Group className="mb-3" controlId="inputCustomer">
+          <Form.Label className="fw-semibold">Customer</Form.Label>
+          <CustomerAutocomplete
+            value={formState.customer}
+            onChange={setCustomer}
+          />
         </Form.Group>
 
-        <Form.Group as={Row} className="mb-3" controlId="inputTotal">
-          <Form.Label column sm={2} className="text-end">
-            Total Amount
-          </Form.Label>
+        {!!formState.customer && (
+          <Form.Group>
+            <Form.Label className="fw-semibold">Address</Form.Label>
+            <p>
+              {formatCustomerAddress(formState.customer)}
+              <br />
+              {formState.customer.country}
+            </p>
+          </Form.Group>
+        )}
 
-          <Col sm={10}>
+        <Form.Group className="mb-3" controlId="inputTax">
+          <Form.Label className="fw-semibold">Items</Form.Label>
+          <Form.Text> ({formState.invoice_lines.length})</Form.Text>
+
+          <Table>
+            <thead>
+              <tr>
+                <th>Quantity</th>
+                <th>Name</th>
+                <th>Product ID</th>
+                <th>Unit</th>
+                <th>VAT</th>
+                <th>Unit Price</th>
+                <th>Total</th>
+                <th>Tax</th>
+              </tr>
+            </thead>
+            <tbody>
+              {formState.invoice_lines.map((item) => {
+                return (
+                  <tr key={`invoice-line-${item.id}`}>
+                    <td>{item.quantity}</td>
+                    <td>{item.label}</td>
+                    <td>{item.product_id}</td>
+                    <td>{item.unit}</td>
+                    <td>{item.vat_rate}%</td>
+                    <td>{formatCurrency(item.product.unit_price)}</td>
+                    <td>{formatCurrency(item.price)}</td>
+                    <td>{formatCurrency(item.tax)}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </Table>
+
+          <div className="mb-3">
+            <InvoiceLineForm onAdd={addInvoiceLine} />
+          </div>
+        </Form.Group>
+
+        <Row>
+          <Form.Group as={Col} className="mb-3" controlId="inputTotal">
+            <Form.Label>Total Amount</Form.Label>
             <InputGroup>
               <InputGroup.Text>€</InputGroup.Text>
               <Form.Control
                 type="text"
                 inputMode="numeric"
                 placeholder="0,00"
+                readOnly
               />
             </InputGroup>
-          </Col>
-        </Form.Group>
+          </Form.Group>
 
-        <Form.Group as={Row} className="mb-3" controlId="inputTax">
-          <Form.Label column sm={2} className="text-end">
-            Tax
-          </Form.Label>
+          <Form.Group as={Col} className="mb-3" controlId="inputTax">
+            <Form.Label>Tax</Form.Label>
 
-          <Col sm={10}>
             <InputGroup>
               <InputGroup.Text>€</InputGroup.Text>
               <Form.Control
                 type="text"
                 inputMode="numeric"
                 placeholder="0,00"
+                readOnly
               />
             </InputGroup>
-          </Col>
-        </Form.Group>
-
-        <Form.Group as={Row} className="mb-3" controlId="inputTax">
-          <Form.Label column sm={2} className="text-end">
-            Items
-          </Form.Label>
-
-          <Col sm={10}>
-            {addingInvoiceLine && <InvoiceLineForm />}
-            <Button
-              variant="secondary"
-              onClick={() => setAddingInvoiceLine(true)}
-            >
-              Add product
-            </Button>
-          </Col>
-        </Form.Group>
-
-        <Row className="mt-5">
-          <Col sm={{ span: 10, offset: 2 }}>
-            <Button variant="primary" type="submit">
-              Create invoice
-            </Button>
-          </Col>
+          </Form.Group>
         </Row>
+
+        <Stack direction="horizontal" gap={2} className="justify-content-end">
+          <Button
+            variant="light"
+            type="reset"
+            onClick={() => window.location.reload()}
+            size="lg"
+          >
+            Clear
+          </Button>
+          <Button
+            variant="primary"
+            type="submit"
+            size="lg"
+            disabled={validateForm()}
+          >
+            Create invoice
+          </Button>
+        </Stack>
       </Form>
     </Container>
   )

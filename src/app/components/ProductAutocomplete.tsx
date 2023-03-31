@@ -11,6 +11,10 @@ interface Props {
 
 const defaultAdditional = { page: 1 }
 
+const getOptionValue = (value: Product) => {
+  return value.id
+}
+
 const ProductAutocomplete = ({ value, onChange }: Props) => {
   const api = useApi()
 
@@ -37,7 +41,8 @@ const ProductAutocomplete = ({ value, onChange }: Props) => {
     <AsyncPaginate
       placeholder="Search a product"
       additional={defaultAdditional}
-      value={value}
+      value={value ?? null}
+      getOptionValue={getOptionValue}
       onChange={onChange}
       loadOptions={loadOptions}
     />
