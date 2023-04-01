@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import ReactDatePicker from 'react-datepicker'
 
 import './InvoiceCreate.css'
@@ -22,8 +22,9 @@ import {
   formatDate,
 } from 'app/lib/formatting'
 
-import type { Invoice, InvoiceLine } from 'types'
+import type { Invoice, InvoiceCreatePayload, InvoiceLine } from 'types'
 import InvoiceLines from '../InvoiceLines'
+import { useApi } from 'api'
 
 const initialState: Invoice = {
   id: 0,
@@ -38,32 +39,27 @@ const initialState: Invoice = {
   invoice_lines: [],
 }
 
-function getInitialDeadline() {
-  const date = new Date()
-  date.setDate(date.getDate() + 7)
-  return date
-}
-
 const InvoiceCreate = () => {
   const [customer, setCustomer] = useState<Invoice['customer']>()
   const [invoiceLines, setInvoiceLines] = useState<Invoice['invoice_lines']>([])
   const [deadline, setDeadline] = useState<Date>(getInitialDeadline())
   const [invoiceDate, setInvoiceDate] = useState<Date>(new Date())
   const [paid, setPaid] = useState(false)
+  const [finalized, setFinalized] = useState(false)
 
-  const editing = true
+  const api = useApi()
 
-  const invoice: Invoice = useMemo(() => {
+  const invoice: InvoiceCreatePayload = useMemo(() => {
     return {
       ...initialState,
-      customer_id: customer?.id || null,
-      customer,
+      customer_id: customer?.id || 0,
       date: invoiceDate ? formatDate(invoiceDate) : null,
       deadline: deadline ? formatDate(deadline) : null,
-      invoice_lines: invoiceLines,
+      invoice_lines_attributes: invoiceLines,
       paid,
+      finalized,
     }
-  }, [customer, invoiceLines, deadline, invoiceDate, paid])
+  }, [customer, invoiceLines, deadline, invoiceDate, paid, finalized])
 
   const addInvoiceLine = (invoiceLine: InvoiceLine) => {
     setInvoiceLines((s) => [...s, invoiceLine])
@@ -72,7 +68,7 @@ const InvoiceCreate = () => {
   const isValidDeadline = validateDeadline(deadline, invoiceDate)
 
   const isFormValid =
-    isValidDeadline && invoice.customer && invoice.invoice_lines.length > 0
+    isValidDeadline && invoice.customer_id && invoiceLines.length > 0
 
   // FIXME: ideally the API would return numbers or a for of currency object with integers,
   // otherwise we end up parsing strings over and over like in this case
@@ -81,7 +77,9 @@ const InvoiceCreate = () => {
 
   const submit: React.FormEventHandler = (e) => {
     e.preventDefault()
-    console.log(invoice)
+    api.postInvoices(null, { invoice }).then((res) => {
+      console.log(res)
+    })
   }
 
   return (
@@ -125,6 +123,22 @@ const InvoiceCreate = () => {
                     filterDate={(date) => validateDeadline(date, invoiceDate)}
                   />
                 </div>
+              </Form.Group>
+              <Form.Group as={Col}>
+                <Form.Label>Paid</Form.Label>
+                <Form.Check
+                  type="checkbox"
+                  checked={invoice.paid}
+                  onChange={(e) => setPaid(e.target.checked)}
+                />
+              </Form.Group>
+              <Form.Group as={Col}>
+                <Form.Label>Finalized</Form.Label>
+                <Form.Check
+                  type="checkbox"
+                  checked={invoice.finalized}
+                  onChange={(e) => setFinalized(e.target.checked)}
+                />
               </Form.Group>
             </Row>
 
@@ -228,6 +242,12 @@ const InvoiceCreate = () => {
 
 function validateDeadline(deadline: Date, invoiceDate: Date) {
   return +deadline >= +invoiceDate
+}
+
+function getInitialDeadline() {
+  const date = new Date()
+  date.setDate(date.getDate() + 7)
+  return date
 }
 
 export default InvoiceCreate

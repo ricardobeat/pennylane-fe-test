@@ -35,9 +35,9 @@ export default function InvoiceLines({
             </td>
           </tr>
         )}
-        {items.map((item) => {
+        {items.map((item, i) => {
           return (
-            <tr key={`invoice-line-${item.id}`}>
+            <tr key={`invoice-line-${i}`}>
               <td>
                 {editable ? (
                   <input type="text" value={item.quantity} />
