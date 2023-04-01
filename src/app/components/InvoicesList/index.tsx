@@ -284,7 +284,7 @@ function getQueryFilters(query?: string, filters?: Record<string, boolean>) {
   }
 
   if (filters?.paid) {
-    payload.push({ field: 'finalized', operator: 'eq', value: true })
+    payload.push({ field: 'paid', operator: 'eq', value: true })
   }
 
   return payload.length > 0 ? JSON.stringify(payload) : undefined
