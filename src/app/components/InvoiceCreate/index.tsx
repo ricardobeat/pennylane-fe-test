@@ -1,8 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import ReactDatePicker from 'react-datepicker'
 
-import './InvoiceCreate.css'
-
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Button from 'react-bootstrap/Button'

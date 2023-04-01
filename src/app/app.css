@@ -1,3 +1,7 @@
+.row-clickable {
+  cursor: pointer;
+}
+
 .form-control[readonly] {
   color: #555;
   background-color: #fafafa;
@@ -8,7 +12,7 @@
   margin: 0;
 }
 
-.customer-details > div {
+.customer-details>div {
   break-inside: avoid-column;
 }
 

@@ -9,7 +9,6 @@ import Spinner from 'react-bootstrap/Spinner'
 import { useApi } from 'api'
 import { useHistory } from 'react-router-dom'
 
-import './InvoicesList.css'
 import { useFetch } from 'app/hooks/use-fetch'
 import {
   formatCurrency,
