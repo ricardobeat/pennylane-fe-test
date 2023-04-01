@@ -1,6 +1,24 @@
-# jean_test_front
+# Pennylane FE test
 
 This repository contains the guidelines for the frontend interview question, as well as a repository skeleton with which to start.
+
+## Notes (Ricardo)
+
+I've implemented the listing, creating a new invoice, editing an invoice, and deleting an invoice. The editor mode allows to remove and add new lines, as well as change the customer, date, and finalized and paid statuses.
+
+I took a bit longer than the suggested 4 hours, probably 5-6 total. Couldn't help to work on the layout a bit as it's hard to think about UX on a disorganized page. Also had some issues with TS and outdated modules in the repo (not sure if this is intentional or not). I could probably continue for another four hours improving interaction details, the lack of feedback on some actions, error states, and so on...
+
+The two advanced features I added as a POC:
+
+### Search
+
+Added a search feature to the invoice listing. I found the `search_any` operator in the backend code, but it seems to only search on customer names. Using a
+relation like `customer.address` doesn't seem to work. It also seems to only support AND queries which limits flexibility. With the current API, a toggle to switch
+the search field (invoice #, customer name, etc) could be easily implemente, but ideally there would be full text search on all fields, a date range selector for both the date and deadline fields, and maybe custom filters like 'past deadline / unpaid'.
+
+### Batch edit mode
+
+I added the initial UI as a proof of concept, but the actions are not implemented. This allows the user to change the status of multiple invoices at once, maybe select them for export or other batch actions. Clicking through to invoice details is disabled until the user exits this mode.
 
 ## Problem statement
 
