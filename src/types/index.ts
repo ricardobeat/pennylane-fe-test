@@ -11,6 +11,10 @@ export type InvoiceCreatePayload = NonNullable<
   NonNullable<Parameters<OperationMethods['postInvoices']>[1]>['invoice']
 >
 
+export type InvoiceUpdatePayload = NonNullable<
+  NonNullable<Parameters<OperationMethods['putInvoice']>[1]>['invoice']
+>
+
 export type Product = Awaited<
   ReturnType<OperationMethods['getSearchProducts']>
 >['data']['products'][0]

@@ -1,5 +1,4 @@
 import { formatCurrency } from 'app/lib/formatting'
-import Card from 'react-bootstrap/esm/Card'
 import Col from 'react-bootstrap/esm/Col'
 import Form from 'react-bootstrap/esm/Form'
 import InputGroup from 'react-bootstrap/esm/InputGroup'
