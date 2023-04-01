@@ -28,19 +28,15 @@ const InvoicesList = (): React.ReactElement => {
 
   const { data: invoices, loading } = useFetch(fetchInvoices, [])
 
-  if (loading) {
-    return (
-      <Alert variant="secondary">
-        <Spinner size="sm" />
-        <small className="ml-3">loading invoices...</small>
-      </Alert>
-    )
-  }
-
   return (
     <Container>
       <Stack gap={3}>
-        <Stack direction="horizontal" className="justify-content-end" gap={3}>
+        <Stack
+          direction="horizontal"
+          className="justify-content-between"
+          gap={3}
+        >
+          <h2>Invoices</h2>
           <Button onClick={() => history.push(`/invoice/new`)}>
             Create invoice
           </Button>
@@ -79,6 +75,12 @@ const InvoicesList = (): React.ReactElement => {
             ))}
           </tbody>
         </Table>
+        {loading && (
+          <Alert style={{ backgroundColor: '#fafafa' }}>
+            <Spinner size="sm" />
+            <small className="ms-3">loading invoices...</small>
+          </Alert>
+        )}
       </Stack>
     </Container>
   )
