@@ -104,7 +104,7 @@ const InvoicesList = (): React.ReactElement => {
               type="search"
               className="form-control"
               style={{ width: '14em' }}
-              placeholder="Search by Customer ID..."
+              placeholder="Search by customer"
               hidden={batchEditing}
               onChange={(e) => setQuery(e.target.value)}
             />
@@ -273,7 +273,10 @@ function getQueryFilters(query?: string, filters?: Record<string, boolean>) {
   const payload = []
 
   if (query) {
-    payload.push({ field: 'customer_id', operator: 'eq', value: query })
+    payload.push({
+      operator: 'search_any',
+      value: query,
+    })
   }
 
   if (filters?.finalized) {
