@@ -71,11 +71,12 @@ export default function InvoiceLines({
               {editable && (
                 <td className="text-end">
                   <Button
-                    variant="danger"
+                    variant="outline-danger"
                     onClick={() => onDelete?.(i)}
                     size="sm"
+                    title="Delete line"
                   >
-                    Delete
+                    {`Ｘ`}
                   </Button>
                 </td>
               )}

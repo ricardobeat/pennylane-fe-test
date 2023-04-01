@@ -65,10 +65,28 @@ const InvoiceShow = () => {
     <p>loading...</p>
   ) : (
     <Container>
-      <Breadcrumb>
-        <Breadcrumb.Item href="/">Home</Breadcrumb.Item>
-        <Breadcrumb.Item active>Invoice #{invoice.id}</Breadcrumb.Item>
-      </Breadcrumb>
+      <Stack
+        direction="horizontal"
+        gap={2}
+        className="justify-content-between mb-3"
+      >
+        <Breadcrumb>
+          <Breadcrumb.Item href="/">Home</Breadcrumb.Item>
+          <Breadcrumb.Item active>Invoice #{invoice.id}</Breadcrumb.Item>
+        </Breadcrumb>
+        <Stack direction="horizontal" gap={2}>
+          <Button
+            variant="light"
+            onClick={editInvoice}
+            disabled={!invoice || invoice.finalized}
+          >
+            Edit invoice
+          </Button>
+          <Button variant="danger" onClick={setFinalized}>
+            Delete invoice
+          </Button>
+        </Stack>
+      </Stack>
 
       <Card className="mb-3">
         <Card.Body>
@@ -120,13 +138,6 @@ const InvoiceShow = () => {
             Set as <span className="fw-semibold">paid</span>
           </Button>
         )}
-        <Button
-          variant="dark"
-          onClick={editInvoice}
-          disabled={!invoice || invoice.finalized}
-        >
-          Edit invoice
-        </Button>
       </Stack>
     </Container>
   )

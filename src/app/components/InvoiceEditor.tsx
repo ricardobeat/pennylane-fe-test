@@ -143,7 +143,7 @@ export default function InvoiceEditor({
 
   return (
     <Form onSubmit={submit}>
-      <Card className="mb-5">
+      <Card className="mb-3">
         <Card.Body className="p-4">
           <Row className="mb-3 align-items-end">
             <Form.Group as={Col}>
@@ -255,48 +255,36 @@ export default function InvoiceEditor({
             className="mt-4 text-end justify-content-end"
           >
             <div>
-              <h3 className="m-0">Tax</h3>
-              <p className="fs-3 lh-2 m-0">{formatCurrency(taxTotal, true)}</p>
+              <h3 className="fs-4 m-0">Tax</h3>
+              <p className="fs-4 lh-2 m-0">{formatCurrency(taxTotal, true)}</p>
             </div>
             <div>
-              <h3 className="m-0">Total</h3>
-              <p className="fs-3 lh-2 m-0">{formatCurrency(total, true)}</p>
+              <h3 className="fs-4 m-0">Total</h3>
+              <p className="fs-4 lh-2 m-0">{formatCurrency(total, true)}</p>
             </div>
           </Stack>
         </Card.Body>
-
-        <Card.Footer>
-          <Stack direction="horizontal" gap={2} className="justify-content-end">
-            {isNewInvoice ? (
-              <Button
-                variant="light"
-                type="reset"
-                onClick={() => window.location.reload()}
-                size="lg"
-              >
-                Clear
-              </Button>
-            ) : (
-              <Button
-                variant="light"
-                type="button"
-                onClick={backToInvoiceView}
-                size="lg"
-              >
-                Cancel
-              </Button>
-            )}
-            <Button
-              variant="primary"
-              type="submit"
-              size="lg"
-              disabled={!isFormValid}
-            >
-              {isNewInvoice ? 'Create invoice' : 'Save invoice'}
-            </Button>
-          </Stack>
-        </Card.Footer>
       </Card>
+
+      <Stack direction="horizontal" gap={2} className="justify-content-end">
+        {isNewInvoice ? (
+          <Button
+            variant="light"
+            type="reset"
+            onClick={() => window.location.reload()}
+            size="lg"
+          >
+            Clear
+          </Button>
+        ) : (
+          <Button variant="light" type="button" onClick={backToInvoiceView}>
+            Cancel
+          </Button>
+        )}
+        <Button variant="primary" type="submit" disabled={!isFormValid}>
+          {isNewInvoice ? 'Create invoice' : 'Save invoice'}
+        </Button>
+      </Stack>
     </Form>
   )
 }
