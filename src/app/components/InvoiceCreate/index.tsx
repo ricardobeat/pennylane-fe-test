@@ -5,7 +5,7 @@ import { formatDate } from 'app/lib/formatting'
 
 import { useApi } from 'api'
 import { useHistory } from 'react-router-dom'
-import type { InvoiceCreatePayload, InvoiceUpdatePayload } from 'types'
+import type { InvoiceCreatePayload } from 'types'
 
 import InvoiceEditor from '../InvoiceEditor'
 

@@ -48,7 +48,9 @@ export default function InvoiceEditor({
   const [finalized, setFinalized] = useState(!!inputInvoice.finalized)
 
   const backToInvoiceView = () => {
-    history.push('/invoice/' + invoice.id)
+    if (!isNewInvoice(invoice)) {
+      history.push('/invoice/' + invoice.id)
+    }
   }
 
   const setPaid = (value: boolean) => {
@@ -58,8 +60,6 @@ export default function InvoiceEditor({
       alert('Cannot set invoice as paid when not finalized')
     }
   }
-
-  const isNewInvoice = !inputInvoice.id
 
   const invoice: InvoiceCreatePayload | InvoiceUpdatePayload = useMemo(() => {
     return {
@@ -86,7 +86,7 @@ export default function InvoiceEditor({
   }
 
   const deleteInvoiceLine = (index: number) => {
-    if (isNewInvoice) {
+    if (isNewInvoice(invoice)) {
       setInvoiceLines((state) => state.filter((_, i) => i !== index))
     } else {
       setInvoiceLines((state) =>
@@ -148,7 +148,11 @@ export default function InvoiceEditor({
           <Row className="mb-3 align-items-end">
             <Form.Group as={Col}>
               <Form.Label>Invoice #</Form.Label>
-              <Form.Control type="text" readOnly value={invoice.id || '--'} />
+              <Form.Control
+                type="text"
+                readOnly
+                value={(invoice as InvoiceUpdatePayload).id || '--'}
+              />
             </Form.Group>
             <Form.Group as={Col}>
               <Form.Label>Date</Form.Label>
@@ -267,7 +271,7 @@ export default function InvoiceEditor({
       </Card>
 
       <Stack direction="horizontal" gap={2} className="justify-content-end">
-        {isNewInvoice ? (
+        {isNewInvoice(invoice) ? (
           <Button
             variant="light"
             type="reset"
@@ -282,11 +286,17 @@ export default function InvoiceEditor({
           </Button>
         )}
         <Button variant="primary" type="submit" disabled={!isFormValid}>
-          {isNewInvoice ? 'Create invoice' : 'Save invoice'}
+          {isNewInvoice(invoice) ? 'Create invoice' : 'Save invoice'}
         </Button>
       </Stack>
     </Form>
   )
+}
+
+function isNewInvoice(
+  invoice: InvoiceCreatePayload | InvoiceUpdatePayload
+): invoice is InvoiceCreatePayload {
+  return !('id' in invoice)
 }
 
 function validateDeadline(
