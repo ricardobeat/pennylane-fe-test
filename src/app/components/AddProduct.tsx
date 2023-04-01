@@ -79,6 +79,7 @@ export function AddProduct({ onAdd }: Props) {
           <Form.Label className="fw-semibold">Quantity</Form.Label>
           <Form.Control
             type="number"
+            min={0}
             value={quantity}
             onChange={(e) => setQuantity(+e.target.value)}
           />
