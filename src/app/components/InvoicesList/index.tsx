@@ -6,6 +6,8 @@ import Stack from 'react-bootstrap/Stack'
 import Table from 'react-bootstrap/Table'
 import Spinner from 'react-bootstrap/Spinner'
 import Pagination from 'react-bootstrap/Pagination'
+import Dropdown from 'react-bootstrap/Dropdown'
+import Form from 'react-bootstrap/Form'
 
 import { useApi } from 'api'
 import { useHistory } from 'react-router-dom'
@@ -18,7 +20,9 @@ import {
 } from 'app/lib/formatting'
 import Container from 'react-bootstrap/esm/Container'
 
-const PAGE_SIZE = 15
+type FilterState = { finalized?: boolean; paid?: boolean }
+
+const PAGE_SIZE = 10
 
 const InvoicesList = (): React.ReactElement => {
   const api = useApi()
@@ -27,18 +31,63 @@ const InvoicesList = (): React.ReactElement => {
   const totalPages = useRef(1)
   const totalEntries = useRef(0)
   const [currentPage, setCurrentPage] = useState(1)
+  const [query, setQuery] = useState<string>() // prototype
+
+  const [filter, setFilter] = useState<FilterState>({}) // prototype
+  const toggleFilter = (input: FilterState) => {
+    setFilter((f) => ({ ...f, ...input }))
+    setCurrentPage(1)
+  }
 
   const fetchInvoices = useCallback(async () => {
+    console.log(filter)
     const { data } = await api.getInvoices({
       page: currentPage,
       per_page: PAGE_SIZE,
+      filter: getQueryFilters(query, filter),
     })
     totalPages.current = data.pagination.total_pages
     totalEntries.current = data.pagination.total_entries
     return data.invoices
-  }, [api, totalPages, currentPage])
+  }, [api, totalPages, currentPage, query, filter])
 
   const { data: invoices, loading } = useFetch(fetchInvoices, [])
+
+  const [batchEditing, setBatchEditing] = useState(false)
+  const [batchIds, setBatchIds] = useState<Record<number, boolean>>({})
+
+  const toggleBatchEdit = () => {
+    setBatchEditing((state) => !state)
+    setBatchIds({})
+  }
+
+  const addToBatch = (invoiceId: number) => {
+    setBatchIds((ids) => ({ ...ids, [invoiceId]: true }))
+  }
+
+  const removeFromBatch = (invoiceId: number) => {
+    setBatchIds((ids) => {
+      ids = { ...ids }
+      delete ids[invoiceId]
+      return ids
+    })
+  }
+
+  const selectRow = (invoiceId: number) => {
+    if (batchIds[invoiceId]) {
+      removeFromBatch(invoiceId)
+    } else {
+      addToBatch(invoiceId)
+    }
+  }
+
+  const handleRowClick = (invoiceId: number) => {
+    if (batchEditing) {
+      selectRow(invoiceId)
+    } else {
+      history.push(`/invoice/${invoiceId}`)
+    }
+  }
 
   return (
     <Container>
@@ -49,15 +98,68 @@ const InvoicesList = (): React.ReactElement => {
           gap={3}
         >
           <h2>Invoices</h2>
-          <Button onClick={() => history.push(`/invoice/new`)}>
-            Create invoice
-          </Button>
+
+          <Stack direction="horizontal" gap={2}>
+            {/* example - not implemented */}
+            <input
+              type="search"
+              className="form-control"
+              style={{ width: '14em' }}
+              placeholder="Search by Customer ID..."
+              hidden={batchEditing}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+
+            <Button
+              onClick={toggleBatchEdit}
+              variant="light"
+              hidden={batchEditing}
+            >
+              Batch edit
+            </Button>
+
+            <Button
+              onClick={() => history.push(`/invoice/new`)}
+              hidden={batchEditing}
+            >
+              Create invoice
+            </Button>
+
+            {/* prototype */}
+            {batchEditing && (
+              <BatchEditingActions
+                batchIds={batchIds}
+                onCancel={toggleBatchEdit}
+              />
+            )}
+          </Stack>
         </Stack>
+
+        <Stack
+          direction="horizontal"
+          gap={2}
+          className="justify-content-end align-items-baseline"
+        >
+          <Form.Text>Show only</Form.Text>
+          <Form.Check
+            type="switch"
+            label="Paid"
+            onChange={(e) => toggleFilter({ paid: e.target.checked })}
+          />
+          <Form.Check
+            type="switch"
+            label="Finalized"
+            onChange={(e) => toggleFilter({ finalized: e.target.checked })}
+          />
+        </Stack>
+
         <Table striped bordered hover>
           <thead>
             <tr>
-              <th>Id</th>
+              {batchEditing && <th>&nbsp;</th>}
+              <th>Invoice #</th>
               <th>Customer</th>
+              <th>CID</th>
               <th>Address</th>
               <th>Total</th>
               <th>Tax</th>
@@ -72,10 +174,20 @@ const InvoicesList = (): React.ReactElement => {
               <tr
                 key={invoice.id}
                 className="row-clickable"
-                onClick={() => history.push(`/invoice/${invoice.id}`)}
+                onClick={() => handleRowClick(invoice.id)}
               >
+                {batchEditing && (
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={!!batchIds[invoice.id]}
+                      onChange={() => selectRow(invoice.id)}
+                    />
+                  </td>
+                )}
                 <td>{invoice.id}</td>
                 <td>{formatCustomerFullName(invoice.customer)}</td>
+                <td>{invoice.customer_id}</td>
                 <td>{formatCustomerAddress(invoice.customer)}</td>
                 <td>{formatCurrency(invoice.total, true)}</td>
                 <td>{formatCurrency(invoice.tax, true)}</td>
@@ -111,10 +223,7 @@ const InvoicesList = (): React.ReactElement => {
                 )
               })}
             </Pagination>
-            <p>
-              Results {paginationRangeStart(currentPage)}-
-              {paginationRangeEnd(currentPage)} of {totalEntries.current}
-            </p>
+            <p>{getResultsRange(currentPage, totalEntries.current)}</p>
           </Stack>
         )}
       </Stack>
@@ -122,12 +231,61 @@ const InvoicesList = (): React.ReactElement => {
   )
 }
 
-function paginationRangeStart(currentPage: number) {
-  return PAGE_SIZE * (currentPage - 1) + 1
+function BatchEditingActions(props: {
+  onCancel: () => void
+  batchIds: Record<number, boolean>
+}) {
+  const notImplemented = () =>
+    alert('Edit: ' + Object.keys(props.batchIds).join(', '))
+
+  return (
+    <Stack direction="horizontal" gap={2} className="justify-content-end">
+      <span className="me-2">
+        {Object.keys(props.batchIds).length} invoices selected
+      </span>
+      <Dropdown>
+        <Dropdown.Toggle variant="warning" id="dropdown-basic">
+          Batch actions
+        </Dropdown.Toggle>
+        <Dropdown.Menu>
+          <Dropdown.Item onClick={notImplemented}>
+            Set all as paid
+          </Dropdown.Item>
+          <Dropdown.Item onClick={notImplemented}>
+            Set all as finalized
+          </Dropdown.Item>
+          <Dropdown.Item onClick={notImplemented}>Delete</Dropdown.Item>
+        </Dropdown.Menu>
+      </Dropdown>
+      <Button onClick={props.onCancel} variant="light">
+        Cancel
+      </Button>
+    </Stack>
+  )
 }
 
-function paginationRangeEnd(currentPage: number) {
-  return PAGE_SIZE * currentPage
+function getResultsRange(current: number, total: number) {
+  const first = PAGE_SIZE * (current - 1) + 1
+  const last = Math.min(PAGE_SIZE * current, total)
+  return `Results ${first}-${last} of ${total}`
+}
+
+function getQueryFilters(query?: string, filters?: Record<string, boolean>) {
+  const payload = []
+
+  if (query) {
+    payload.push({ field: 'customer_id', operator: 'eq', value: query })
+  }
+
+  if (filters?.finalized) {
+    payload.push({ field: 'finalized', operator: 'eq', value: true })
+  }
+
+  if (filters?.paid) {
+    payload.push({ field: 'finalized', operator: 'eq', value: true })
+  }
+
+  return payload.length > 0 ? JSON.stringify(payload) : undefined
 }
 
 export default InvoicesList
