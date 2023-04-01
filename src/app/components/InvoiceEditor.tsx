@@ -1,10 +1,12 @@
+import { useState, useMemo } from 'react'
 import {
   formatCustomerFullName,
   formatCustomerAddress,
   formatCurrency,
   formatDate,
+  formatCurrencyValue,
 } from 'app/lib/formatting'
-import { useState, useMemo } from 'react'
+import { getTotal, getTotalTax } from 'app/lib/invoices'
 import Alert from 'react-bootstrap/esm/Alert'
 import Button from 'react-bootstrap/esm/Button'
 import Card from 'react-bootstrap/esm/Card'
@@ -18,10 +20,13 @@ import {
   InvoiceCreatePayload,
   InvoiceLine,
   InvoiceUpdatePayload,
+  Product,
 } from 'types'
 import { AddProduct } from './AddProduct'
 import CustomerAutocomplete from './CustomerAutocomplete'
 import InvoiceLines from './InvoiceLines'
+import { NewInvoiceLineWithProduct } from 'types/invoice'
+import { useHistory } from 'react-router-dom'
 
 interface Props {
   invoice: Partial<Invoice>
@@ -32,14 +37,19 @@ export default function InvoiceEditor({
   invoice: inputInvoice,
   onSubmit,
 }: Props) {
+  const history = useHistory()
   const [customer, setCustomer] = useState(inputInvoice.customer)
-  const [invoiceLines, setInvoiceLines] = useState(
-    inputInvoice.invoice_lines || []
-  )
+  const [rawInvoiceLines, setInvoiceLines] = useState<
+    NewInvoiceLineWithProduct[]
+  >(inputInvoice.invoice_lines || [])
   const [deadline, setDeadline] = useState(inputInvoice.deadline)
   const [invoiceDate, setInvoiceDate] = useState(inputInvoice.date)
   const [paid, _setPaid] = useState(!!inputInvoice.paid)
   const [finalized, setFinalized] = useState(!!inputInvoice.finalized)
+
+  const backToInvoiceView = () => {
+    history.push('/invoice/' + invoice.id)
+  }
 
   const setPaid = (value: boolean) => {
     if (invoice.finalized) {
@@ -59,11 +69,11 @@ export default function InvoiceEditor({
       deadline: deadline,
       finalized,
       paid: finalized && paid,
-      invoice_lines_attributes: invoiceLines,
+      invoice_lines_attributes: rawInvoiceLines,
     }
   }, [
     customer,
-    invoiceLines,
+    rawInvoiceLines,
     deadline,
     invoiceDate,
     paid,
@@ -75,13 +85,49 @@ export default function InvoiceEditor({
     setInvoiceLines((s) => [...s, invoiceLine])
   }
 
+  const deleteInvoiceLine = (index: number) => {
+    if (isNewInvoice) {
+      setInvoiceLines((state) => state.filter((_, i) => i !== index))
+    } else {
+      setInvoiceLines((state) =>
+        state.map((line, i) => {
+          if (i === index) {
+            return { ...line, _destroy: true }
+          } else {
+            return line
+          }
+        })
+      )
+    }
+  }
+
+  const changeLineQuantity = (
+    index: number,
+    product: Product,
+    quantity: number
+  ) => {
+    setInvoiceLines((state) => {
+      const lines = [...state]
+      lines[index] = {
+        ...lines[index],
+        quantity,
+        price: formatCurrencyValue(getTotal(product, quantity)),
+        tax: formatCurrencyValue(getTotalTax(product, quantity)),
+      }
+      return lines
+    })
+  }
+
+  // rows marked for deletion must be excluded from all derived data
+  const invoiceLines = rawInvoiceLines.filter((line) => !('_destroy' in line))
+
   const deadlineDays = differenceInDays(deadline, invoiceDate)
   const isValidDeadline = validateDeadline(deadline, invoiceDate)
 
   const isFormValid =
     isValidDeadline && invoice.customer_id && invoiceLines.length > 0
 
-  // FIXME: ideally the API would return numbers or a for of currency object with integers,
+  // FIXME: ideally the API would return numbers or some type of currency object with integers,
   // otherwise we end up parsing strings over and over like in this case
   const total = invoiceLines.reduce((p, c) => p + Number(c.price), 0)
   const taxTotal = invoiceLines.reduce((p, c) => p + Number(c.tax), 0)
@@ -99,10 +145,10 @@ export default function InvoiceEditor({
     <Form onSubmit={submit}>
       <Card className="mb-5">
         <Card.Body className="p-4">
-          <Row className="mb-3">
+          <Row className="mb-3 align-items-end">
             <Form.Group as={Col}>
               <Form.Label>Invoice #</Form.Label>
-              <Form.Control type="text" readOnly value="--" />
+              <Form.Control type="text" readOnly value={invoice.id || '--'} />
             </Form.Group>
             <Form.Group as={Col}>
               <Form.Label>Date</Form.Label>
@@ -133,18 +179,18 @@ export default function InvoiceEditor({
             </Form.Group>
 
             <Form.Group as={Col}>
-              <Form.Label>Finalized</Form.Label>
               <Form.Check
                 type="checkbox"
                 checked={invoice.finalized}
+                label="Finalized"
                 onChange={(e) => setFinalized(e.target.checked)}
               />
             </Form.Group>
 
             <Form.Group as={Col}>
-              <Form.Label>Paid</Form.Label>
               <Form.Check
                 type="checkbox"
+                label="Paid"
                 checked={invoice.finalized && invoice.paid}
                 onChange={(e) => setPaid(e.target.checked)}
               />
@@ -187,11 +233,16 @@ export default function InvoiceEditor({
             </Card>
           )}
 
-          <Form.Group className="mb-3" controlId="inputTax">
+          <Form.Group className="mb-3">
             <Form.Label className="fw-semibold">Items</Form.Label>
             <Form.Text> ({invoiceLines.length})</Form.Text>
 
-            <InvoiceLines items={invoiceLines} />
+            <InvoiceLines
+              editable
+              items={invoiceLines}
+              onDelete={deleteInvoiceLine}
+              onChangeQuantity={changeLineQuantity}
+            />
 
             <Card className="mb-3 p-3" style={{ background: '#fafafa' }}>
               <AddProduct onAdd={addInvoiceLine} />
@@ -216,14 +267,25 @@ export default function InvoiceEditor({
 
         <Card.Footer>
           <Stack direction="horizontal" gap={2} className="justify-content-end">
-            <Button
-              variant="light"
-              type="reset"
-              onClick={() => window.location.reload()}
-              size="lg"
-            >
-              Clear
-            </Button>
+            {isNewInvoice ? (
+              <Button
+                variant="light"
+                type="reset"
+                onClick={() => window.location.reload()}
+                size="lg"
+              >
+                Clear
+              </Button>
+            ) : (
+              <Button
+                variant="light"
+                type="button"
+                onClick={backToInvoiceView}
+                size="lg"
+              >
+                Cancel
+              </Button>
+            )}
             <Button
               variant="primary"
               type="submit"

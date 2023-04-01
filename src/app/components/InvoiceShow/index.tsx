@@ -44,7 +44,13 @@ const InvoiceShow = () => {
   )
 
   const setFinalized = () => {
-    editInPlace({ finalized: true })
+    if (
+      window.confirm(
+        'Are you sure? An invoice cannot be edited after being finalized.'
+      )
+    ) {
+      editInPlace({ finalized: true })
+    }
   }
 
   const setPaid = () => {

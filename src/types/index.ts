@@ -7,6 +7,12 @@ export type Invoice = Awaited<
 
 export type InvoiceLine = Invoice['invoice_lines'][0]
 
+export type NewInvoiceLine = NonNullable<
+  NonNullable<
+    NonNullable<Parameters<OperationMethods['postInvoices']>[1]>['invoice']
+  >['invoice_lines_attributes']
+>[0]
+
 export type InvoiceCreatePayload = NonNullable<
   NonNullable<Parameters<OperationMethods['postInvoices']>[1]>['invoice']
 >
@@ -14,6 +20,12 @@ export type InvoiceCreatePayload = NonNullable<
 export type InvoiceUpdatePayload = NonNullable<
   NonNullable<Parameters<OperationMethods['putInvoice']>[1]>['invoice']
 >
+
+export type UpdateInvoiceLine = NonNullable<
+  NonNullable<
+    NonNullable<Parameters<OperationMethods['putInvoice']>[1]>['invoice']
+  >['invoice_lines_attributes']
+>[0]
 
 export type Product = Awaited<
   ReturnType<OperationMethods['getSearchProducts']>

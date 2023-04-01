@@ -1,20 +1,26 @@
 import Table from 'react-bootstrap/esm/Table'
 import { formatCurrency } from 'app/lib/formatting'
-import type { Invoice } from 'types'
+import type { Product } from 'types'
+import Button from 'react-bootstrap/esm/Button'
+import { NewInvoiceLineWithProduct } from 'types/invoice'
 
 interface Props {
-  items: Invoice['invoice_lines']
+  items: NewInvoiceLineWithProduct[]
   borderless?: React.ComponentProps<typeof Table>['borderless']
   editable?: boolean
+  onDelete?: (index: number) => void
+  onChangeQuantity?: (index: number, product: Product, quantity: number) => void
 }
 
 export default function InvoiceLines({
   items,
   borderless = false,
   editable,
+  onDelete,
+  onChangeQuantity,
 }: Props) {
   return (
-    <Table borderless={borderless}>
+    <Table borderless={borderless} className="align-baseline">
       <thead>
         <tr>
           <th>Quantity</th>
@@ -25,6 +31,7 @@ export default function InvoiceLines({
           <th>Unit Price</th>
           <th>Tax</th>
           <th>Total</th>
+          {editable ? <td></td> : null}
         </tr>
       </thead>
       <tbody>
@@ -40,7 +47,16 @@ export default function InvoiceLines({
             <tr key={`invoice-line-${i}`}>
               <td>
                 {editable ? (
-                  <input type="text" value={item.quantity} />
+                  <input
+                    className="form-control"
+                    type="number"
+                    min={0}
+                    value={item.quantity}
+                    onChange={(e) =>
+                      onChangeQuantity?.(i, item.product, +e.target.value)
+                    }
+                    style={{ width: 80 }}
+                  />
                 ) : (
                   item.quantity
                 )}
@@ -52,6 +68,17 @@ export default function InvoiceLines({
               <td>{formatCurrency(item.product.unit_price, true)}</td>
               <td>{formatCurrency(item.tax, true)}</td>
               <td>{formatCurrency(item.price, true)}</td>
+              {editable && (
+                <td className="text-end">
+                  <Button
+                    variant="danger"
+                    onClick={() => onDelete?.(i)}
+                    size="sm"
+                  >
+                    Delete
+                  </Button>
+                </td>
+              )}
             </tr>
           )
         })}

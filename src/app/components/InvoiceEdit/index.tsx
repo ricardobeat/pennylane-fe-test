@@ -21,7 +21,6 @@ const InvoiceShow = () => {
   }, [api, id])
 
   const submit = (invoice: InvoiceUpdatePayload) => {
-    console.log('putting', invoice)
     api.putInvoice({ id: invoice.id }, { invoice }).then((res) => {
       if (res.status === 200) {
         history.push('/invoice/' + res.data.id)

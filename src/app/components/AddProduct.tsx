@@ -1,13 +1,14 @@
 import { useCallback, useState, useMemo } from 'react'
 import type { Product, InvoiceLine } from '../../types'
 
+import Table from 'react-bootstrap/Table'
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
 import Stack from 'react-bootstrap/Stack'
 
 import ProductAutocomplete from './ProductAutocomplete'
-import { formatCurrencyValue } from 'app/lib/formatting'
-import InvoiceLineEditable from './InvoiceLineEditable'
+import { formatCurrency, formatCurrencyValue } from 'app/lib/formatting'
+import { getTotal, getTotalTax } from '../lib/invoices'
 
 interface Props {
   onAdd(invoiceLine: NewInvoiceLine): void
@@ -58,10 +59,6 @@ export function AddProduct({ onAdd }: Props) {
 
   return (
     <>
-      {Boolean(selectedProduct) && (
-        <InvoiceLineEditable invoiceLine={invoiceLine as InvoiceLine} />
-      )}
-
       <Stack
         direction="horizontal"
         gap={2}
@@ -75,13 +72,14 @@ export function AddProduct({ onAdd }: Props) {
           />
         </Form.Group>
 
-        <Form.Group controlId="inputTax">
+        <Form.Group controlId="inputQuantity">
           <Form.Label className="fw-semibold">Quantity</Form.Label>
           <Form.Control
             type="number"
             min={0}
             value={quantity}
             onChange={(e) => setQuantity(+e.target.value)}
+            style={{ width: 80 }}
           />
         </Form.Group>
 
@@ -94,16 +92,31 @@ export function AddProduct({ onAdd }: Props) {
           Add product
         </Button>
       </Stack>
+
+      {selectedProduct && invoiceLine ? (
+        <Table borderless className="table-sm mt-3">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Product ID</th>
+              <th>Unit</th>
+              <th>VAT</th>
+              <th>Unit Price</th>
+              <th>Tax</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>{selectedProduct.label}</td>
+              <td>{selectedProduct.id}</td>
+              <td>{selectedProduct.unit}</td>
+              <td>{selectedProduct.vat_rate}%</td>
+              <td>{formatCurrency(selectedProduct.unit_price, true)}</td>
+              <td>{formatCurrency(selectedProduct.unit_tax, true)}</td>
+            </tr>
+          </tbody>
+        </Table>
+      ) : null}
     </>
   )
-}
-
-function getTotal(product: Product | undefined, quantity: number) {
-  if (!product) return 0
-  return Number(product.unit_price) * quantity
-}
-
-function getTotalTax(product: Product | undefined, quantity: number) {
-  if (!product) return 0
-  return Number(product.unit_tax) * quantity
 }
