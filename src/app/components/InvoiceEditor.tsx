@@ -272,13 +272,8 @@ export default function InvoiceEditor({
 
       <Stack direction="horizontal" gap={2} className="justify-content-end">
         {isNewInvoice(invoice) ? (
-          <Button
-            variant="light"
-            type="reset"
-            onClick={() => window.location.reload()}
-            size="lg"
-          >
-            Clear
+          <Button variant="light" type="reset" onClick={() => history.goBack()}>
+            Cancel
           </Button>
         ) : (
           <Button variant="light" type="button" onClick={backToInvoiceView}>
@@ -296,7 +291,7 @@ export default function InvoiceEditor({
 function isNewInvoice(
   invoice: InvoiceCreatePayload | InvoiceUpdatePayload
 ): invoice is InvoiceCreatePayload {
-  return !('id' in invoice)
+  return !('id' in invoice && invoice.id !== undefined)
 }
 
 function validateDeadline(
