@@ -40,7 +40,6 @@ const InvoicesList = (): React.ReactElement => {
   }
 
   const fetchInvoices = useCallback(async () => {
-    console.log(filter)
     const { data } = await api.getInvoices({
       page: currentPage,
       per_page: PAGE_SIZE,

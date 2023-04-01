@@ -43,12 +43,18 @@ const InvoiceShow = () => {
     [invoice, api, forceRefresh]
   )
 
+  const deleteInvoice = async () => {
+    if (invoice && window.confirm('Delete this invoice?')) {
+      await api.deleteInvoice({ id: invoice.id }).catch((e) => {
+        alert('woops')
+      })
+      history.push('/invoices')
+    }
+  }
+
   const setFinalized = () => {
-    if (
-      window.confirm(
-        'Are you sure? An invoice cannot be edited after being finalized.'
-      )
-    ) {
+    const msg = 'An invoice cannot be edited after being finalized.'
+    if (window.confirm(msg)) {
       editInPlace({ finalized: true })
     }
   }
@@ -82,7 +88,7 @@ const InvoiceShow = () => {
           >
             Edit invoice
           </Button>
-          <Button variant="danger" onClick={setFinalized}>
+          <Button variant="danger" onClick={deleteInvoice}>
             Delete invoice
           </Button>
         </Stack>
