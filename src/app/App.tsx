@@ -15,8 +15,8 @@ function App() {
       <Router>
         <Switch>
           <Route path="/invoice/new" component={InvoiceCreate} />
-          <Route path="/invoice/:id" component={InvoiceShow} />
           <Route path="/invoice/:id/edit" component={InvoiceEdit} />
+          <Route path="/invoice/:id" component={InvoiceShow} />
           <Route path="/" component={InvoicesList} />
         </Switch>
       </Router>
