@@ -23,19 +23,7 @@ import {
 import type { Invoice, InvoiceCreatePayload, InvoiceLine } from 'types'
 import InvoiceLines from '../InvoiceLines'
 import { useApi } from 'api'
-
-const initialState: Invoice = {
-  id: 0,
-  customer_id: null,
-  finalized: false,
-  paid: false,
-  date: formatDate(new Date()),
-  deadline: null,
-  total: null,
-  tax: null,
-  customer: undefined,
-  invoice_lines: [],
-}
+import { useHistory } from 'react-router-dom'
 
 const InvoiceCreate = () => {
   const [customer, setCustomer] = useState<Invoice['customer']>()
@@ -46,16 +34,16 @@ const InvoiceCreate = () => {
   const [finalized, setFinalized] = useState(false)
 
   const api = useApi()
+  const history = useHistory()
 
   const invoice: InvoiceCreatePayload = useMemo(() => {
     return {
-      ...initialState,
       customer_id: customer?.id || 0,
       date: invoiceDate ? formatDate(invoiceDate) : null,
       deadline: deadline ? formatDate(deadline) : null,
-      invoice_lines_attributes: invoiceLines,
       paid,
       finalized,
+      invoice_lines_attributes: invoiceLines,
     }
   }, [customer, invoiceLines, deadline, invoiceDate, paid, finalized])
 
@@ -63,6 +51,7 @@ const InvoiceCreate = () => {
     setInvoiceLines((s) => [...s, invoiceLine])
   }
 
+  const deadlineDays = differenceInDays(deadline, invoiceDate)
   const isValidDeadline = validateDeadline(deadline, invoiceDate)
 
   const isFormValid =
@@ -76,7 +65,12 @@ const InvoiceCreate = () => {
   const submit: React.FormEventHandler = (e) => {
     e.preventDefault()
     api.postInvoices(null, { invoice }).then((res) => {
-      console.log(res)
+      if (res.status === 200) {
+        history.push('/invoice/' + res.data.id)
+      } else {
+        alert('Something went wrong ¯_(ツ)_/¯') //TODO: proper error handling on the page
+        console.error('Failed to create invoice: %o', res)
+      }
     })
   }
 
@@ -109,7 +103,9 @@ const InvoiceCreate = () => {
                 </div>
               </Form.Group>
               <Form.Group as={Col}>
-                <Form.Label>Deadline</Form.Label>
+                <Form.Label>
+                  Deadline <Form.Text>({deadlineDays}d)</Form.Text>
+                </Form.Label>
                 <div>
                   <ReactDatePicker
                     className={`form-control ${
@@ -181,9 +177,9 @@ const InvoiceCreate = () => {
 
             <Form.Group className="mb-3" controlId="inputTax">
               <Form.Label className="fw-semibold">Items</Form.Label>
-              <Form.Text> ({invoice.invoice_lines.length})</Form.Text>
+              <Form.Text> ({invoiceLines.length})</Form.Text>
 
-              <InvoiceLines items={invoice.invoice_lines} />
+              <InvoiceLines items={invoiceLines} />
 
               <Card className="mb-3 p-3" style={{ background: '#fafafa' }}>
                 <AddProduct onAdd={addInvoiceLine} />
@@ -240,6 +236,11 @@ const InvoiceCreate = () => {
 
 function validateDeadline(deadline: Date, invoiceDate: Date) {
   return +deadline >= +invoiceDate
+}
+
+function differenceInDays(deadline: Date, invoiceDate: Date) {
+  const diff = Number(deadline) - Number(invoiceDate)
+  return Math.floor(diff / (1000 * 60 * 60 * 24))
 }
 
 function getInitialDeadline() {
